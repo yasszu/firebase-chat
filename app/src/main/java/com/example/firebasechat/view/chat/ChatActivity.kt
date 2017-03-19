@@ -6,7 +6,7 @@ import android.os.Bundle
 import android.support.v7.widget.Toolbar
 import android.view.MenuItem
 import com.example.firebasechat.R
-import com.example.firebasechat.view.common.BaseActivity
+import com.example.firebasechat.view.base.BaseActivity
 
 class ChatActivity : BaseActivity() {
 
@@ -21,8 +21,7 @@ class ChatActivity : BaseActivity() {
     private fun setToolbar() {
         val toolbar = findViewById(R.id.toolbar) as Toolbar
         setSupportActionBar(toolbar)
-        val ab = supportActionBar
-        ab!!.setDisplayHomeAsUpEnabled(true)
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
     }
 
     override fun onOptionsItemSelected(item: MenuItem?): Boolean {
@@ -36,9 +35,8 @@ class ChatActivity : BaseActivity() {
     }
 
     fun initFragment(matchingId: Int) {
-        val tag = ChatFragment.TAG
-        supportFragmentManager.findFragmentByTag(tag).let {
-            addFragment(ChatFragment.newInstance(matchingId), tag)
+        supportFragmentManager.findFragmentByTag(ChatFragment.TAG).let {
+            addFragment(ChatFragment.newInstance(matchingId), ChatFragment.TAG)
         }
     }
 

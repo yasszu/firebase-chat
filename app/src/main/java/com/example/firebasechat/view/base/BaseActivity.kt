@@ -1,4 +1,4 @@
-package com.example.firebasechat.view.common
+package com.example.firebasechat.view.base
 
 import android.os.Bundle
 import android.support.v4.app.Fragment

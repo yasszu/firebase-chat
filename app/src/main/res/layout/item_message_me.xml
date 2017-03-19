@@ -16,7 +16,6 @@
             android:layout_width="30dp"
             android:layout_height="30dp"
             android:layout_margin="4dp"
-            android:visibility="gone"
             android:src="@drawable/ic_account_circle"/>
 
         <LinearLayout
@@ -30,17 +29,15 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="@dimen/margin_small"
-                android:layout_marginBottom="4dp"
-                android:visibility="gone"
                 android:textSize="@dimen/text_size_caption" />
 
             <TextView
                 android:id="@+id/content"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_margin="@dimen/margin_small"
                 android:padding="@dimen/margin_default"
-                android:layout_marginLeft="@dimen/margin_double"
-                android:layout_marginRight="@dimen/margin_small"
+                android:layout_marginRight="@dimen/margin_double"
                 android:background="@drawable/selector_background_radius"
                 android:textColor="@color/black"
                 android:textSize="@dimen/text_size_body"/>

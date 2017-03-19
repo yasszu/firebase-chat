@@ -14,35 +14,36 @@ import com.example.firebasechat.R
 import com.example.firebasechat.helper.ImageViewHelper.loadCircleImage
 import com.example.firebasechat.model.Member
 import com.example.firebasechat.model.Message
-import com.example.firebasechat.view.chat.MessageAdapter.MessageViewHolder
-import com.example.firebasechat.view.chat.MessageAdapter.ViewType
-import com.example.firebasechat.view.common.BaseFragment
+import com.example.firebasechat.view.chat.ChatAdapter.MessageViewHolder
+import com.example.firebasechat.view.chat.ChatAdapter.ViewType
+import com.example.firebasechat.view.base.BaseFragment
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 
 
 class ChatFragment : BaseFragment() {
 
-    private var mMatchingId: Int = 0
+    private var mRoomId: Int = 0
     private var mMe: Member = Member()
-    private var mMembers: MutableMap<Int, Member> = mutableMapOf()
+    private var mMembers: MutableMap<String, Member> = mutableMapOf()
 
+    private lateinit var mAuth: FirebaseAuth
     private lateinit var mMessagesRef: DatabaseReference
-    private lateinit var mAdapter: MessageAdapter
+    private lateinit var mAdapter: ChatAdapter
     private lateinit var mLinearLayoutManager: LinearLayoutManager
     private lateinit var mRecyclerView: RecyclerView
     private lateinit var mEditText: EditText
     private lateinit var mSendButton: Button
 
     companion object {
-        val MATCHING_ID = "matchingId"
+        val ROOM_ID = "roomId"
         val MESSAGES_CHILD = "messages"
         val TAG: String = ChatFragment::class.java.simpleName
-
         fun newInstance(matchingId: Int): ChatFragment {
             val args: Bundle = Bundle()
             val f = ChatFragment()
-            args.putInt(MATCHING_ID, matchingId)
+            args.putInt(ROOM_ID, matchingId)
             f.arguments = args
             return f
         }
@@ -50,10 +51,12 @@ class ChatFragment : BaseFragment() {
 
     override fun onCreateView(inflater: LayoutInflater?, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val view = inflater?.inflate(R.layout.fragment_chat, container, false)
-        mMatchingId = arguments.getInt(MATCHING_ID, 0)
-        mMessagesRef = FirebaseDatabase.getInstance().getReference(MESSAGES_CHILD).child(mMatchingId.toString())
+        mRoomId = arguments.getInt(ROOM_ID, 0)
+        mMessagesRef = FirebaseDatabase.getInstance().getReference(MESSAGES_CHILD).child(mRoomId.toString())
+        mAuth = FirebaseAuth.getInstance()
         bindViews(view)
-        requestMatching(mMatchingId)
+        fetchProfile()
+        fetchMembers(mRoomId)
         return view
     }
 
@@ -68,15 +71,22 @@ class ChatFragment : BaseFragment() {
         mSendButton = view.findViewById(R.id.sendButton) as Button
     }
 
-    fun requestMatching(matchingId: Int) {
-        // TODO Implement server request
-        val me = Member(1234, "John Smith", "")
+    fun fetchMembers(roomId: Int) {
         val members = listOf<Member>()
-
-        mMe = me
         mMembers.put(mMe.id, mMe)
         setMembers(members)
         initRecyclerView()
+    }
+
+    fun fetchProfile() {
+        if (mAuth.currentUser != null) {
+            val name = mAuth.currentUser?.displayName.let { "name" }
+            val url = mAuth.currentUser?.photoUrl.let { "" }
+            val uid = mAuth.currentUser?.uid.let { "" }
+            mMe = Member(uid, name, url)
+        } else {
+            mMe = Member("","","")
+        }
     }
 
     fun setMembers(members: List<Member>) {
@@ -92,7 +102,7 @@ class ChatFragment : BaseFragment() {
     }
 
     fun initAdapter() {
-        mAdapter = MessageAdapter(mMessagesRef, object : MessageAdapter.Listener {
+        mAdapter = ChatAdapter(mMessagesRef, object : ChatAdapter.Listener {
             override fun onGetItemViewType(message: Message): Int {
                 return if (isSelf(message.userId)) ViewType.ME.id else ViewType.OTHERS.id
             }
@@ -149,6 +159,6 @@ class ChatFragment : BaseFragment() {
     val timeStamp: Long
         get() = System.currentTimeMillis()
 
-    fun isSelf(userId: Int) = mMe.id == userId
+    fun isSelf(userId: String) = mMe.id.equals(userId)
 
 }

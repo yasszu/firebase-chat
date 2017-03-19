@@ -11,7 +11,7 @@ import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.Query
 import com.example.firebasechat.model.Message
 
-class MessageAdapter : FirebaseRecyclerAdapter<Message, MessageAdapter.MessageViewHolder> {
+class ChatAdapter : FirebaseRecyclerAdapter<Message, ChatAdapter.MessageViewHolder> {
 
     enum class ViewType(val id: Int) {
         OTHERS(0) {
