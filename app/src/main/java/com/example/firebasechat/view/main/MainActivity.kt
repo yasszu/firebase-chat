@@ -22,7 +22,6 @@ class MainActivity : BaseActivity(), GoogleApiClient.OnConnectionFailedListener 
 
     val TAG = "MainActivity"
     val RC_SIGN_IN = 1000
-    val chatRoomId = 0
 
     lateinit var mBinding: ActivityMainBinding
     lateinit var mAuth: FirebaseAuth
@@ -37,7 +36,7 @@ class MainActivity : BaseActivity(), GoogleApiClient.OnConnectionFailedListener 
         initAuthListener()
         setupViews()
         if (isLogin) {
-            ChatActivity.start(this, chatRoomId)
+            startChatRoom()
         }
     }
 
@@ -61,7 +60,7 @@ class MainActivity : BaseActivity(), GoogleApiClient.OnConnectionFailedListener 
            if (auth.currentUser == null) {
                Log.d("FirebaseAuth", "signed_out")
            } else {
-               ChatActivity.start(this, chatRoomId)
+               startChatRoom()
            }
        }
     }
@@ -83,7 +82,7 @@ class MainActivity : BaseActivity(), GoogleApiClient.OnConnectionFailedListener 
                 .build()
     }
 
-    public override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent) {
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent) {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == RC_SIGN_IN) {
             val result = Auth.GoogleSignInApi.getSignInResultFromIntent(data)
@@ -95,7 +94,7 @@ class MainActivity : BaseActivity(), GoogleApiClient.OnConnectionFailedListener 
         }
     }
 
-    private fun firebaseAuthWithGoogle(acct: GoogleSignInAccount) {
+    fun firebaseAuthWithGoogle(acct: GoogleSignInAccount) {
         val credential = GoogleAuthProvider.getCredential(acct.idToken, null)
         mAuth.signInWithCredential(credential).addOnCompleteListener(this) { task ->
             if (!task.isSuccessful) {
@@ -104,12 +103,12 @@ class MainActivity : BaseActivity(), GoogleApiClient.OnConnectionFailedListener 
         }
     }
 
-    private fun signIn() {
+    fun signIn() {
         val signInIntent = Auth.GoogleSignInApi.getSignInIntent(mGoogleApiClient)
         startActivityForResult(signInIntent, RC_SIGN_IN)
     }
 
-    private fun signOut() {
+    fun signOut() {
         // Firebase sign out
         mAuth.signOut()
         // Google sign out
@@ -118,7 +117,7 @@ class MainActivity : BaseActivity(), GoogleApiClient.OnConnectionFailedListener 
         }
     }
 
-    private fun revokeAccess() {
+    fun revokeAccess() {
         // Firebase sign out
         mAuth.signOut()
         // Google revoke access
@@ -131,4 +130,10 @@ class MainActivity : BaseActivity(), GoogleApiClient.OnConnectionFailedListener 
         Log.d(TAG, "onConnectionFailed:" + cr)
         Toast.makeText(this, "Google Play Services error.", Toast.LENGTH_SHORT).show()
     }
+
+    fun startChatRoom() {
+        val roomId = 0
+        ChatActivity.start(this, roomId)
+    }
+
 }

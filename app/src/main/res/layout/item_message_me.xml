@@ -8,7 +8,8 @@
         android:orientation="horizontal"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="@dimen/margin_small"
+        android:paddingLeft="@dimen/margin_small"
+        android:paddingRight="@dimen/margin_small"
         android:gravity="center_vertical">
 
         <ImageView
@@ -35,9 +36,11 @@
                 android:id="@+id/content"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_margin="@dimen/margin_small"
+                android:layout_marginLeft="@dimen/margin_small"
+                android:layout_marginRight="@dimen/margin_small"
+                android:layout_marginTop="@dimen/margin_min"
+                android:layout_marginBottom="@dimen/margin_default"
                 android:padding="@dimen/margin_default"
-                android:layout_marginRight="@dimen/margin_double"
                 android:background="@drawable/selector_background_radius"
                 android:textColor="@color/black"
                 android:textSize="@dimen/text_size_body"/>

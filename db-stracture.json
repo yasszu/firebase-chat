@@ -1,0 +1,20 @@
+{
+  "messages": {
+    "{room-id}": {
+      "{message-id}": {
+        "userId": "sgh4ogh45whl",
+        "auther": "User Name",
+        "body": "Message content",
+        "saved": false
+      }
+    }
+  },
+  "members": {
+    "{room-id}": {
+      "{user-id}": {
+        "name": "User Name",
+        "photoUrl": "url"
+      }
+    }
+  }
+}

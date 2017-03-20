@@ -4,6 +4,7 @@ import android.graphics.Color
 import android.os.Bundle
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -14,31 +15,32 @@ import com.example.firebasechat.R
 import com.example.firebasechat.helper.ImageViewHelper.loadCircleImage
 import com.example.firebasechat.model.Member
 import com.example.firebasechat.model.Message
+import com.example.firebasechat.repository.MessagesRepository
 import com.example.firebasechat.view.chat.ChatAdapter.MessageViewHolder
 import com.example.firebasechat.view.chat.ChatAdapter.ViewType
 import com.example.firebasechat.view.base.BaseFragment
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DatabaseReference
-import com.google.firebase.database.FirebaseDatabase
 
 
 class ChatFragment : BaseFragment() {
 
-    private var mRoomId: Int = 0
-    private var mMe: Member = Member()
-    private var mMembers: MutableMap<String, Member> = mutableMapOf()
+    val roomId: Int
+        get() = arguments.getInt(ROOM_ID, 0)
 
-    private lateinit var mAuth: FirebaseAuth
-    private lateinit var mMessagesRef: DatabaseReference
-    private lateinit var mAdapter: ChatAdapter
-    private lateinit var mLinearLayoutManager: LinearLayoutManager
-    private lateinit var mRecyclerView: RecyclerView
-    private lateinit var mEditText: EditText
-    private lateinit var mSendButton: Button
+    var me: Member = Member()
+    var members: MutableMap<String, Member> = mutableMapOf()
+
+    lateinit var messages: MessagesRepository
+    lateinit var auth: FirebaseAuth
+    lateinit var adapter: ChatAdapter
+    lateinit var linearLayoutManager: LinearLayoutManager
+    lateinit var recyclerView: RecyclerView
+    lateinit var editText: EditText
+    lateinit var sendButton: Button
 
     companion object {
         val ROOM_ID = "roomId"
-        val MESSAGES_CHILD = "messages"
         val TAG: String = ChatFragment::class.java.simpleName
         fun newInstance(matchingId: Int): ChatFragment {
             val args: Bundle = Bundle()
@@ -51,12 +53,11 @@ class ChatFragment : BaseFragment() {
 
     override fun onCreateView(inflater: LayoutInflater?, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val view = inflater?.inflate(R.layout.fragment_chat, container, false)
-        mRoomId = arguments.getInt(ROOM_ID, 0)
-        mMessagesRef = FirebaseDatabase.getInstance().getReference(MESSAGES_CHILD).child(mRoomId.toString())
-        mAuth = FirebaseAuth.getInstance()
+        auth = FirebaseAuth.getInstance()
+        messages = MessagesRepository(roomId)
         bindViews(view)
         fetchProfile()
-        fetchMembers(mRoomId)
+        fetchMembers()
         return view
     }
 
@@ -66,43 +67,43 @@ class ChatFragment : BaseFragment() {
     }
 
     fun bindViews(view: View?) {
-        mRecyclerView = view?.findViewById(R.id.recyclerView) as RecyclerView
-        mEditText = view.findViewById(R.id.editText) as EditText
-        mSendButton = view.findViewById(R.id.sendButton) as Button
+        recyclerView = view?.findViewById(R.id.recyclerView) as RecyclerView
+        editText = view.findViewById(R.id.editText) as EditText
+        sendButton = view.findViewById(R.id.sendButton) as Button
     }
 
-    fun fetchMembers(roomId: Int) {
+    fun fetchMembers() {
         val members = listOf<Member>()
-        mMembers.put(mMe.id, mMe)
+        this.members.put(me.id, me)
         setMembers(members)
         initRecyclerView()
     }
 
     fun fetchProfile() {
-        if (mAuth.currentUser != null) {
-            val name = mAuth.currentUser?.displayName.let { "name" }
-            val url = mAuth.currentUser?.photoUrl.let { "" }
-            val uid = mAuth.currentUser?.uid.let { "" }
-            mMe = Member(uid, name, url)
+        if (auth.currentUser != null) {
+            val name = auth.currentUser?.displayName.let { "name" }
+            val url = auth.currentUser?.photoUrl.let { "" }
+            val uid = auth.currentUser?.uid.let { "" }
+            me = Member(uid, name, url)
         } else {
-            mMe = Member("","","")
+            me = Member("","","")
         }
     }
 
     fun setMembers(members: List<Member>) {
-        members.map { mMembers.put(it.id, it) }
+        members.map { this.members.put(it.id, it) }
     }
 
     fun initRecyclerView() {
         initAdapter()
-        mLinearLayoutManager = LinearLayoutManager(context)
-        mLinearLayoutManager.stackFromEnd = true
-        mRecyclerView.layoutManager = mLinearLayoutManager
-        mRecyclerView.adapter = mAdapter
+        linearLayoutManager = LinearLayoutManager(context)
+        linearLayoutManager.stackFromEnd = true
+        recyclerView.layoutManager = linearLayoutManager
+        recyclerView.adapter = adapter
     }
 
     fun initAdapter() {
-        mAdapter = ChatAdapter(mMessagesRef, object : ChatAdapter.Listener {
+        adapter = ChatAdapter(messages.reference, object : ChatAdapter.Listener {
             override fun onGetItemViewType(message: Message): Int {
                 return if (isSelf(message.userId)) ViewType.ME.id else ViewType.OTHERS.id
             }
@@ -111,7 +112,7 @@ class ChatFragment : BaseFragment() {
                 populateItems(viewHolder!!, message!!, ref)
             }
         })
-        mAdapter.registerAdapterDataObserver(object : RecyclerView.AdapterDataObserver() {
+        adapter.registerAdapterDataObserver(object : RecyclerView.AdapterDataObserver() {
             override fun onItemRangeInserted(positionStart: Int, itemCount: Int) {
                 super.onItemRangeInserted(positionStart, itemCount)
                 scrollToShowNewItem(positionStart)
@@ -120,7 +121,7 @@ class ChatFragment : BaseFragment() {
     }
 
     fun populateItems(viewHolder: MessageViewHolder, message: Message, ref: DatabaseReference) {
-        val member = mMembers[message.userId]
+        val member = members[message.userId]
         viewHolder.content.text = message.body
         viewHolder.content.isSelected = message.saved
         viewHolder.content.setTextColor(if (message.saved) Color.WHITE else Color.BLACK)
@@ -132,10 +133,10 @@ class ChatFragment : BaseFragment() {
     }
 
     fun scrollToShowNewItem(positionStart: Int) {
-        val MessageCount = mAdapter.itemCount
-        val lastVisiblePosition = mLinearLayoutManager.findLastCompletelyVisibleItemPosition()
+        val MessageCount = adapter.itemCount
+        val lastVisiblePosition = linearLayoutManager.findLastCompletelyVisibleItemPosition()
         if (lastVisiblePosition == -1 || positionStart >= MessageCount - 1 && lastVisiblePosition == positionStart - 1) {
-            mRecyclerView.scrollToPosition(positionStart)
+            recyclerView.scrollToPosition(positionStart)
         }
     }
 
@@ -145,20 +146,20 @@ class ChatFragment : BaseFragment() {
     }
 
     fun initSendButton(){
-        mSendButton.setOnClickListener {
-            writeMessage(mEditText.text.toString())
+        sendButton.setOnClickListener {
+            writeMessage(editText.text.toString())
         }
     }
 
     fun writeMessage(text: String) {
-        val message = Message(mMe.id, text, timeStamp, false)
-        mMessagesRef.push().setValue(message)
-        mEditText.setText("")
+        messages.write(Message(me.id, text, timeStamp, false))
+        editText.setText("")
+        messages.findAll().map { Log.d("message", it.body) }
     }
 
     val timeStamp: Long
         get() = System.currentTimeMillis()
 
-    fun isSelf(userId: String) = mMe.id.equals(userId)
+    fun isSelf(userId: String) = me.id == userId
 
 }
