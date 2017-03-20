@@ -79,8 +79,7 @@ class ChatFragment : BaseFragment() {
     fun initRecyclerView() {
         initAdapter()
         linearLayoutManager = LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false)
-        linearLayoutManager.scrollToPosition(0)
-        linearLayoutManager.stackFromEnd = false
+        linearLayoutManager.stackFromEnd = true
         recyclerView.layoutManager = linearLayoutManager
         recyclerView.adapter = adapter
     }
@@ -104,7 +103,7 @@ class ChatFragment : BaseFragment() {
     }
 
     fun populateItems(viewHolder: MessageViewHolder, message: Message, ref: DatabaseReference) {
-        val member: Member? = members.find(auth.currentUser?.uid)
+        val member: Member? = members.find(message.uid)
         viewHolder.content.text = message.body
         viewHolder.content.isSelected = message.saved
         viewHolder.content.setTextColor(if (message.saved) Color.WHITE else Color.BLACK)
