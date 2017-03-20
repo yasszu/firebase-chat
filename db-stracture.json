@@ -1,20 +1,22 @@
 {
-  "messages": {
-    "{room-id}": {
-      "{message-id}": {
-        "userId": "sgh4ogh45whl",
-        "auther": "User Name",
-        "body": "Message content",
-        "saved": false
-      }
+  "members" : [ {
+    "{uid}" : {
+      "name" : "User Name",
+      "photoUrl" : "https://lh3.googleusercontent.com/-pMvyhCcLPa8/AAAAAAAAAAI/AAAAAAAAAG4/F-9LJ3Vfv0A/s96-c/photo.jpg"
     }
-  },
-  "members": {
-    "{room-id}": {
-      "{user-id}": {
-        "name": "User Name",
-        "photoUrl": "url"
-      }
+  } ],
+  "messages" : [ {
+    "-KffS-u3EQYUABqexkgs" : {
+      "body" : "text",
+      "saved" : false,
+      "timestamp" : 1490008934189,
+      "uid" : "asdgjhapui5puqhw4ptiudsfbrae"
+    },
+    "-KffS18d4ap16-zzt-mf" : {
+      "body" : "text",
+      "saved" : false,
+      "timestamp" : 1490008939281,
+      "uid" : "asdgjhapui5puqhw4ptiudsfbrae"
     }
-  }
+  } ]
 }

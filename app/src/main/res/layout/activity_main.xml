@@ -29,10 +29,11 @@
             android:gravity="center">
 
             <Button
-                android:id="@+id/start_button"
+                android:id="@+id/login_button"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:padding="16dp"
+                android:padding="@dimen/margin_default"
+                android:layout_margin="@dimen/margin_default"
                 android:text="Google sign in" />
 
         </LinearLayout>

@@ -1,6 +1,8 @@
 package com.example.firebasechat.view.main
 
 import android.content.Intent
+
+
 import android.databinding.DataBindingUtil
 import android.os.Bundle
 import android.util.Log
@@ -16,8 +18,6 @@ import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.api.GoogleApiClient
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
-
-
 class MainActivity : BaseActivity(), GoogleApiClient.OnConnectionFailedListener {
 
     val TAG = "MainActivity"
@@ -28,16 +28,16 @@ class MainActivity : BaseActivity(), GoogleApiClient.OnConnectionFailedListener 
     lateinit var mAuthListener: FirebaseAuth.AuthStateListener
     lateinit var mGoogleApiClient: GoogleApiClient
 
+    val isLogin: Boolean
+        get() = mAuth.currentUser != null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         mBinding = DataBindingUtil.setContentView(this, R.layout.activity_main)
         mAuth = FirebaseAuth.getInstance()
-        initGoogleApiClient()
         initAuthListener()
+        initGoogleApiClient()
         setupViews()
-        if (isLogin) {
-            startChatRoom()
-        }
     }
 
     override fun onStart() {
@@ -52,7 +52,7 @@ class MainActivity : BaseActivity(), GoogleApiClient.OnConnectionFailedListener 
 
     fun setupViews() {
         setSupportActionBar(mBinding.toolbar)
-        mBinding.startButton.setOnClickListener { signIn() }
+        mBinding.loginButton.setOnClickListener { signIn() }
     }
 
     fun initAuthListener() {
@@ -64,9 +64,6 @@ class MainActivity : BaseActivity(), GoogleApiClient.OnConnectionFailedListener 
            }
        }
     }
-
-    val isLogin: Boolean
-        get() = mAuth.currentUser != null
 
     val gso: GoogleSignInOptions
         get() = GoogleSignInOptions
@@ -112,7 +109,7 @@ class MainActivity : BaseActivity(), GoogleApiClient.OnConnectionFailedListener 
         // Firebase sign out
         mAuth.signOut()
         // Google sign out
-        Auth.GoogleSignInApi.signOut(mGoogleApiClient).setResultCallback{ status ->
+        Auth.GoogleSignInApi.signOut(mGoogleApiClient).setResultCallback{
             Toast.makeText(this, "Google sign out.", Toast.LENGTH_SHORT).show()
         }
     }
@@ -121,7 +118,7 @@ class MainActivity : BaseActivity(), GoogleApiClient.OnConnectionFailedListener 
         // Firebase sign out
         mAuth.signOut()
         // Google revoke access
-        Auth.GoogleSignInApi.revokeAccess(mGoogleApiClient).setResultCallback{ status ->
+        Auth.GoogleSignInApi.revokeAccess(mGoogleApiClient).setResultCallback{
             Toast.makeText(this, "Google sign out.", Toast.LENGTH_SHORT).show()
         }
     }
@@ -132,8 +129,10 @@ class MainActivity : BaseActivity(), GoogleApiClient.OnConnectionFailedListener 
     }
 
     fun startChatRoom() {
+        if (!isLogin) return
         val roomId = 0
         ChatActivity.start(this, roomId)
+        finish()
     }
 
 }

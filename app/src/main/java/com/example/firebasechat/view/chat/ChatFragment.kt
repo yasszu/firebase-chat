@@ -4,7 +4,6 @@ import android.graphics.Color
 import android.os.Bundle
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -15,24 +14,23 @@ import com.example.firebasechat.R
 import com.example.firebasechat.helper.ImageViewHelper.loadCircleImage
 import com.example.firebasechat.model.Member
 import com.example.firebasechat.model.Message
+import com.example.firebasechat.repository.MembersRepository
 import com.example.firebasechat.repository.MessagesRepository
+import com.example.firebasechat.view.base.BaseFragment
 import com.example.firebasechat.view.chat.ChatAdapter.MessageViewHolder
 import com.example.firebasechat.view.chat.ChatAdapter.ViewType
-import com.example.firebasechat.view.base.BaseFragment
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DatabaseReference
 
 
 class ChatFragment : BaseFragment() {
 
-    val roomId: Int
-        get() = arguments.getInt(ROOM_ID, 0)
+    val roomId: Int get() = arguments.getInt(ROOM_ID, 0)
 
-    var me: Member = Member()
-    var members: MutableMap<String, Member> = mutableMapOf()
-
+    lateinit var members: MembersRepository
     lateinit var messages: MessagesRepository
     lateinit var auth: FirebaseAuth
+
     lateinit var adapter: ChatAdapter
     lateinit var linearLayoutManager: LinearLayoutManager
     lateinit var recyclerView: RecyclerView
@@ -44,10 +42,10 @@ class ChatFragment : BaseFragment() {
         val TAG: String = ChatFragment::class.java.simpleName
         fun newInstance(matchingId: Int): ChatFragment {
             val args: Bundle = Bundle()
-            val f = ChatFragment()
+            val fragment = ChatFragment()
             args.putInt(ROOM_ID, matchingId)
-            f.arguments = args
-            return f
+            fragment.arguments = args
+            return fragment
         }
     }
 
@@ -55,14 +53,15 @@ class ChatFragment : BaseFragment() {
         val view = inflater?.inflate(R.layout.fragment_chat, container, false)
         auth = FirebaseAuth.getInstance()
         messages = MessagesRepository(roomId)
+        members = MembersRepository(roomId)
         bindViews(view)
-        fetchProfile()
-        fetchMembers()
+        sendProfile()
         return view
     }
 
     override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        initRecyclerView()
         initSendButton()
     }
 
@@ -72,32 +71,16 @@ class ChatFragment : BaseFragment() {
         sendButton = view.findViewById(R.id.sendButton) as Button
     }
 
-    fun fetchMembers() {
-        val members = listOf<Member>()
-        this.members.put(me.id, me)
-        setMembers(members)
-        initRecyclerView()
-    }
-
-    fun fetchProfile() {
-        if (auth.currentUser != null) {
-            val name = auth.currentUser?.displayName.let { "name" }
-            val url = auth.currentUser?.photoUrl.let { "" }
-            val uid = auth.currentUser?.uid.let { "" }
-            me = Member(uid, name, url)
-        } else {
-            me = Member("","","")
-        }
-    }
-
-    fun setMembers(members: List<Member>) {
-        members.map { this.members.put(it.id, it) }
+    fun sendProfile() {
+        val currentUser = auth.currentUser?: return
+        members.write(currentUser)
     }
 
     fun initRecyclerView() {
         initAdapter()
-        linearLayoutManager = LinearLayoutManager(context)
-        linearLayoutManager.stackFromEnd = true
+        linearLayoutManager = LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false)
+        linearLayoutManager.scrollToPosition(0)
+        linearLayoutManager.stackFromEnd = false
         recyclerView.layoutManager = linearLayoutManager
         recyclerView.adapter = adapter
     }
@@ -105,7 +88,7 @@ class ChatFragment : BaseFragment() {
     fun initAdapter() {
         adapter = ChatAdapter(messages.reference, object : ChatAdapter.Listener {
             override fun onGetItemViewType(message: Message): Int {
-                return if (isSelf(message.userId)) ViewType.ME.id else ViewType.OTHERS.id
+                return if (isSelf(message.uid)) ViewType.ME.id else ViewType.OTHERS.id
             }
 
             override fun onPopulate(viewHolder: MessageViewHolder?, message: Message?, ref: DatabaseReference) {
@@ -121,14 +104,14 @@ class ChatFragment : BaseFragment() {
     }
 
     fun populateItems(viewHolder: MessageViewHolder, message: Message, ref: DatabaseReference) {
-        val member = members[message.userId]
+        val member: Member? = members.find(auth.currentUser?.uid)
         viewHolder.content.text = message.body
         viewHolder.content.isSelected = message.saved
         viewHolder.content.setTextColor(if (message.saved) Color.WHITE else Color.BLACK)
         viewHolder.author.text = member?.name
-        setThumbnail(viewHolder.thumbnail, member?.thumb)
+        setThumbnail(viewHolder.thumbnail, member?.photoUrl)
         viewHolder.content.setOnClickListener {
-            ref.setValue(Message(message.userId, message.body, message.timestamp, !message.saved))
+            ref.setValue(Message(message.uid, message.body, message.timestamp, !message.saved))
         }
     }
 
@@ -141,7 +124,6 @@ class ChatFragment : BaseFragment() {
     }
 
     private fun setThumbnail(imageView: ImageView?, url: String?) {
-        if (url == null || url.isBlank()) return
         imageView?.loadCircleImage(url, R.drawable.ic_account_circle)
     }
 
@@ -152,14 +134,11 @@ class ChatFragment : BaseFragment() {
     }
 
     fun writeMessage(text: String) {
-        messages.write(Message(me.id, text, timeStamp, false))
+        val uid = auth.currentUser?.uid ?: return
+        messages.post(Message(uid, text, messages.timeStamp, false))
         editText.setText("")
-        messages.findAll().map { Log.d("message", it.body) }
     }
 
-    val timeStamp: Long
-        get() = System.currentTimeMillis()
-
-    fun isSelf(userId: String) = me.id == userId
+    fun isSelf(uid: String) = auth.currentUser?.uid == uid
 
 }

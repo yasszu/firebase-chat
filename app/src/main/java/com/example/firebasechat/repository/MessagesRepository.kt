@@ -18,15 +18,17 @@ class MessagesRepository(val roomId: Int) {
 
     val firebaseData: FirebaseData
 
+    val timeStamp: Long
+        get() = System.currentTimeMillis()
+
     init {
         firebaseData = FirebaseData(reference)
     }
 
-    fun write(message: Message) {
+    fun post(message: Message) {
         reference.push().setValue(message)
     }
 
-    /** Get current snapshots **/
     fun findAll(): List<Message> = firebaseData.snapshots.map { it.getValue(Message::class.java) }
 
 }

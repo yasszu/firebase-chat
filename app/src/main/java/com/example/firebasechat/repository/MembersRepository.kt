@@ -1,6 +1,8 @@
 package com.example.firebasechat.repository
 
+import android.util.Log
 import com.example.firebasechat.model.Member
+import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 
@@ -22,12 +24,24 @@ class MembersRepository(val roomId: Int) {
         firebaseData = FirebaseData(reference)
     }
 
-    fun write(userId: String, member: Member) {
-        if (userId.isEmpty()) return
-        reference.push().setValue(member)
+    fun write(currentUser: FirebaseUser) {
+        val uid = currentUser.uid
+        Log.d("name", currentUser.displayName)
+        val name = currentUser.displayName
+        val photoUrl = currentUser.photoUrl.toString()
+        val member = Member(name, photoUrl)
+        write(uid, member)
     }
 
-    /** Get current snapshots **/
+    fun write(uid: String, member: Member) {
+        if (uid.isEmpty()) return
+        reference.child(uid).setValue(member)
+    }
+
+    fun find(uid: String?): Member? {
+        return firebaseData.snapshots.find { it.key == uid }?.getValue(Member::class.java)
+    }
+
     fun findAll(): List<Member> = firebaseData.snapshots.map { it.getValue(Member::class.java) }
 
 }
