@@ -6,5 +6,4 @@
 * Kotlin v1.1.1
 
 # Getting Started
-## [Firebase](https://firebase.google.com/docs/android/setup)
-* Setup google-services.json
+* Setup [google-services.json](https://firebase.google.com/docs/android/setup)
