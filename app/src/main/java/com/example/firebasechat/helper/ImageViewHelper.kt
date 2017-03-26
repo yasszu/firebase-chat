@@ -3,6 +3,7 @@ package com.example.firebasechat.helper
 import android.support.annotation.DrawableRes
 import android.widget.ImageView
 import com.squareup.picasso.Picasso
+import com.example.firebasechat.helper.CircleTransformation
 
 object ImageViewHelper {
 
@@ -25,13 +26,13 @@ object ImageViewHelper {
             Picasso.with(context)
                     .load(defaultDrawable)
                     .error(defaultDrawable)
-                    .transform(CircleTransform())
+                    .transform(CircleTransformation())
                     .into(this)
         } else {
             Picasso.with(context)
                     .load(url)
                     .error(defaultDrawable)
-                    .transform(CircleTransform())
+                    .transform(CircleTransformation())
                     .into(this)
         }
     }

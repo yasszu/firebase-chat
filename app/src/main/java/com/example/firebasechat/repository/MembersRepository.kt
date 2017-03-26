@@ -13,10 +13,11 @@ class MembersRepository(val roomId: Int) {
 
     val MEMBERS_CHILD = "members"
 
-    val reference: DatabaseReference
-        get() = FirebaseDatabase.getInstance()
+    val reference: DatabaseReference by lazy {
+        FirebaseDatabase.getInstance()
                 .getReference(MEMBERS_CHILD)
                 .child(roomId.toString())
+    }
 
     val firebaseData: FirebaseData
 

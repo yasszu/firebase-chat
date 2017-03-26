@@ -18,24 +18,39 @@ import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.api.GoogleApiClient
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
+
+
 class MainActivity : BaseActivity(), GoogleApiClient.OnConnectionFailedListener {
 
     val TAG = "MainActivity"
     val RC_SIGN_IN = 1000
 
     lateinit var mBinding: ActivityMainBinding
-    lateinit var mAuth: FirebaseAuth
-    lateinit var mAuthListener: FirebaseAuth.AuthStateListener
+
     lateinit var mGoogleApiClient: GoogleApiClient
 
-    val isLogin: Boolean
-        get() = mAuth.currentUser != null
+    val mAuth: FirebaseAuth = FirebaseAuth.getInstance()
+
+    val mAuthListener = FirebaseAuth.AuthStateListener { auth ->
+        if (auth.currentUser == null) {
+            Log.d("FirebaseAuth", "signed_out")
+        } else {
+            startChatRoom()
+        }
+    }
+
+    val isLogin: Boolean get() = mAuth.currentUser != null
+
+    val gso: GoogleSignInOptions by lazy { GoogleSignInOptions
+            .Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+            .requestIdToken(getString(R.string.web_client_id))
+            .requestEmail()
+            .build()
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         mBinding = DataBindingUtil.setContentView(this, R.layout.activity_main)
-        mAuth = FirebaseAuth.getInstance()
-        initAuthListener()
         initGoogleApiClient()
         setupViews()
     }
@@ -54,23 +69,6 @@ class MainActivity : BaseActivity(), GoogleApiClient.OnConnectionFailedListener 
         setSupportActionBar(mBinding.toolbar)
         mBinding.loginButton.setOnClickListener { signIn() }
     }
-
-    fun initAuthListener() {
-       mAuthListener = FirebaseAuth.AuthStateListener { auth ->
-           if (auth.currentUser == null) {
-               Log.d("FirebaseAuth", "signed_out")
-           } else {
-               startChatRoom()
-           }
-       }
-    }
-
-    val gso: GoogleSignInOptions
-        get() = GoogleSignInOptions
-                .Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                .requestIdToken(getString(R.string.web_client_id))
-                .requestEmail()
-                .build()
 
     fun initGoogleApiClient() {
         mGoogleApiClient = GoogleApiClient.Builder(this)
@@ -106,7 +104,6 @@ class MainActivity : BaseActivity(), GoogleApiClient.OnConnectionFailedListener 
     }
 
     fun signOut() {
-        // Firebase sign out
         mAuth.signOut()
         // Google sign out
         Auth.GoogleSignInApi.signOut(mGoogleApiClient).setResultCallback{
@@ -115,7 +112,6 @@ class MainActivity : BaseActivity(), GoogleApiClient.OnConnectionFailedListener 
     }
 
     fun revokeAccess() {
-        // Firebase sign out
         mAuth.signOut()
         // Google revoke access
         Auth.GoogleSignInApi.revokeAccess(mGoogleApiClient).setResultCallback{

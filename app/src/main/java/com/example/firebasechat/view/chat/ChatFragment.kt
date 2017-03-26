@@ -7,7 +7,6 @@ import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageView
 import com.example.firebasechat.R
@@ -25,35 +24,58 @@ import com.google.firebase.database.DatabaseReference
 
 class ChatFragment : BaseFragment() {
 
-    val roomId: Int get() = arguments.getInt(ROOM_ID, 0)
+    val auth: FirebaseAuth = FirebaseAuth.getInstance()
 
-    lateinit var members: MembersRepository
-    lateinit var messages: MessagesRepository
-    lateinit var auth: FirebaseAuth
+    val roomId: Int by lazy { arguments.getInt(ROOM_ID, 0) }
 
-    lateinit var adapter: ChatAdapter
-    lateinit var linearLayoutManager: LinearLayoutManager
+    val members: MembersRepository by lazy { MembersRepository(roomId) }
+
+    val messages: MessagesRepository by lazy { MessagesRepository(roomId) }
+
+    val linearLayoutManager: LinearLayoutManager by lazy {
+        LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false).apply {
+            this.stackFromEnd = true
+        }
+    }
+
+   val adapter: ChatAdapter by lazy {
+       ChatAdapter(messages.reference, object : ChatAdapter.Listener {
+           override fun onGetItemViewType(message: Message): Int {
+               return if (isSelf(message.uid)) ViewType.ME.id else ViewType.OTHERS.id
+           }
+
+           override fun onPopulate(viewHolder: MessageViewHolder?, message: Message?, ref: DatabaseReference) {
+               populateItems(viewHolder!!, message!!, ref)
+           }
+       }).apply {
+           this.registerAdapterDataObserver(object : RecyclerView.AdapterDataObserver() {
+               override fun onItemRangeInserted(positionStart: Int, itemCount: Int) {
+                   super.onItemRangeInserted(positionStart, itemCount)
+                   scrollToShowNewItem(positionStart)
+               }
+           })
+       }
+   }
+
+
     lateinit var recyclerView: RecyclerView
     lateinit var editText: EditText
-    lateinit var sendButton: Button
+    lateinit var sendButton: View
 
     companion object {
         val ROOM_ID = "roomId"
         val TAG: String = ChatFragment::class.java.simpleName
         fun newInstance(matchingId: Int): ChatFragment {
-            val args: Bundle = Bundle()
-            val fragment = ChatFragment()
-            args.putInt(ROOM_ID, matchingId)
-            fragment.arguments = args
-            return fragment
+            return ChatFragment().apply {
+                this.arguments = Bundle().apply {
+                    this.putInt(ROOM_ID, matchingId)
+                }
+            }
         }
     }
 
     override fun onCreateView(inflater: LayoutInflater?, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val view = inflater?.inflate(R.layout.fragment_chat, container, false)
-        auth = FirebaseAuth.getInstance()
-        messages = MessagesRepository(roomId)
-        members = MembersRepository(roomId)
         bindViews(view)
         sendProfile()
         return view
@@ -62,13 +84,14 @@ class ChatFragment : BaseFragment() {
     override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         initRecyclerView()
-        initSendButton()
     }
 
     fun bindViews(view: View?) {
         recyclerView = view?.findViewById(R.id.recyclerView) as RecyclerView
         editText = view.findViewById(R.id.editText) as EditText
-        sendButton = view.findViewById(R.id.sendButton) as Button
+        sendButton = view.findViewById(R.id.sendButton).apply {
+            this.setOnClickListener { writeMessage(editText.text.toString()) }
+        }
     }
 
     fun sendProfile() {
@@ -77,29 +100,8 @@ class ChatFragment : BaseFragment() {
     }
 
     fun initRecyclerView() {
-        initAdapter()
-        linearLayoutManager = LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false)
-        linearLayoutManager.stackFromEnd = true
         recyclerView.layoutManager = linearLayoutManager
         recyclerView.adapter = adapter
-    }
-
-    fun initAdapter() {
-        adapter = ChatAdapter(messages.reference, object : ChatAdapter.Listener {
-            override fun onGetItemViewType(message: Message): Int {
-                return if (isSelf(message.uid)) ViewType.ME.id else ViewType.OTHERS.id
-            }
-
-            override fun onPopulate(viewHolder: MessageViewHolder?, message: Message?, ref: DatabaseReference) {
-                populateItems(viewHolder!!, message!!, ref)
-            }
-        })
-        adapter.registerAdapterDataObserver(object : RecyclerView.AdapterDataObserver() {
-            override fun onItemRangeInserted(positionStart: Int, itemCount: Int) {
-                super.onItemRangeInserted(positionStart, itemCount)
-                scrollToShowNewItem(positionStart)
-            }
-        })
     }
 
     fun populateItems(viewHolder: MessageViewHolder, message: Message, ref: DatabaseReference) {
@@ -124,12 +126,6 @@ class ChatFragment : BaseFragment() {
 
     private fun setThumbnail(imageView: ImageView?, url: String?) {
         imageView?.loadCircleImage(url, R.drawable.ic_account_circle)
-    }
-
-    fun initSendButton(){
-        sendButton.setOnClickListener {
-            writeMessage(editText.text.toString())
-        }
     }
 
     fun writeMessage(text: String) {

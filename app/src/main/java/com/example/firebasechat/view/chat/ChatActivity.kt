@@ -10,18 +10,14 @@ import com.example.firebasechat.view.base.BaseActivity
 
 class ChatActivity : BaseActivity() {
 
+    val matchingId: Int by lazy { intent.getIntExtra(CHAT_ROOM_ID, -1) }
+    val toolbar: Toolbar by lazy { findViewById(R.id.toolbar) as Toolbar }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_chat)
-        setToolbar()
-        val matchingId = intent.getIntExtra(CHAT_ROOM_ID, -1)
-        initFragment(matchingId)
-    }
-
-    private fun setToolbar() {
-        val toolbar = findViewById(R.id.toolbar) as Toolbar
         setSupportActionBar(toolbar)
-//        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        initFragment(matchingId)
     }
 
     override fun onOptionsItemSelected(item: MenuItem?): Boolean {
@@ -35,7 +31,7 @@ class ChatActivity : BaseActivity() {
     }
 
     fun initFragment(matchingId: Int) {
-        supportFragmentManager.findFragmentByTag(ChatFragment.TAG).let {
+        if (supportFragmentManager.findFragmentByTag(ChatFragment.TAG) == null) {
             addFragment(ChatFragment.newInstance(matchingId), ChatFragment.TAG)
         }
     }
