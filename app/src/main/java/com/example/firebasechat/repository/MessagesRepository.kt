@@ -7,7 +7,7 @@ import com.google.firebase.database.FirebaseDatabase
 /**
  * Created by Yasuhiro Suzuki on 2017/03/20.
  */
-class MessagesRepository(val roomId: Int) {
+class MessagesRepository(val roomId: String) {
 
     val MESSAGES_CHILD = "messages"
 

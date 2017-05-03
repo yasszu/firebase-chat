@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout  xmlns:android="http://schemas.android.com/apk/res/android">
+    <data>
+        <variable name="room" type="com.example.firebasechat.model.Room"/>
+        <variable name="viewModel" type="com.example.firebasechat.view.room.RoomsViewModel"/>
+    </data>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingTop="@dimen/margin_default"
+        android:paddingBottom="@dimen/margin_default"
+        android:paddingLeft="@dimen/margin_double"
+        android:paddingRight="@dimen/margin_double"
+        android:background="@drawable/frame_border_bottom"
+        android:foreground="?android:attr/selectableItemBackground"
+        android:onClick="@{(view) -> viewModel.onClickItem(room)}">
+        <TextView
+            android:id="@+id/roomId"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="@dimen/text_size_title"
+            android:text="@{room.id}"/>
+    </RelativeLayout>
+
+</layout>

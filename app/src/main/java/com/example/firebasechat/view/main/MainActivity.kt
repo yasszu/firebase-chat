@@ -36,7 +36,6 @@ class MainActivity : BaseActivity(), GoogleApiClient.OnConnectionFailedListener 
         if (auth.currentUser == null) {
             Log.d("FirebaseAuth", "signed_out")
         } else {
-//            startChatRoom()
             startRoomsActivity()
         }
     }
@@ -124,13 +123,6 @@ class MainActivity : BaseActivity(), GoogleApiClient.OnConnectionFailedListener 
     override fun onConnectionFailed(cr: ConnectionResult) {
         Log.d(TAG, "onConnectionFailed:" + cr)
         Toast.makeText(this, "Google Play Services error.", Toast.LENGTH_SHORT).show()
-    }
-
-    fun startChatRoom() {
-        if (!isLogin) return
-        val roomId = 0
-        ChatActivity.start(this, roomId)
-        finish()
     }
 
     fun startRoomsActivity() {

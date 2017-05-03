@@ -2,21 +2,23 @@ package com.example.firebasechat.view.chat
 
 import android.app.Activity
 import android.content.Intent
+import android.databinding.DataBindingUtil
 import android.os.Bundle
-import android.support.v7.widget.Toolbar
 import android.view.MenuItem
 import com.example.firebasechat.R
+import com.example.firebasechat.databinding.ActivityChatBinding
 import com.example.firebasechat.view.base.BaseActivity
 
 class ChatActivity : BaseActivity() {
 
-    val matchingId: Int by lazy { intent.getIntExtra(CHAT_ROOM_ID, -1) }
-    val toolbar: Toolbar by lazy { findViewById(R.id.toolbar) as Toolbar }
+    val matchingId: String by lazy { intent.getStringExtra(CHAT_ROOM_ID) }
+
+    lateinit var binding: ActivityChatBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_chat)
-        setSupportActionBar(toolbar)
+        binding = DataBindingUtil.setContentView(this, R.layout.activity_chat)
+        initToolbar()
         initFragment(matchingId)
     }
 
@@ -30,15 +32,20 @@ class ChatActivity : BaseActivity() {
         }
     }
 
-    fun initFragment(matchingId: Int) {
+    fun initToolbar() {
+        setSupportActionBar(binding.toolbar)
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+    }
+
+    fun initFragment(roomId: String) {
         if (supportFragmentManager.findFragmentByTag(ChatFragment.TAG) == null) {
-            addFragment(ChatFragment.newInstance(matchingId), ChatFragment.TAG)
+            addFragment(ChatFragment.newInstance(roomId), ChatFragment.TAG)
         }
     }
 
     companion object {
         val CHAT_ROOM_ID = "chatRoomId"
-        fun start(activity: Activity, matchingId: Int) {
+        fun start(activity: Activity, matchingId: String) {
             val intent = Intent(activity, ChatActivity::class.java)
             intent.putExtra(CHAT_ROOM_ID, matchingId)
             activity.startActivity(intent)

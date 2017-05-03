@@ -9,7 +9,7 @@ import com.google.firebase.database.FirebaseDatabase
 /**
  * Created by Yasuhiro Suzuki on 2017/03/20.
  */
-class MembersRepository(val roomId: Int) {
+class MembersRepository(val roomId: String) {
 
     val MEMBERS_CHILD = "members"
 
