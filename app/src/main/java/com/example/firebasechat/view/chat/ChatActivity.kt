@@ -11,7 +11,7 @@ import com.example.firebasechat.view.base.BaseActivity
 
 class ChatActivity : BaseActivity() {
 
-    val matchingId: String by lazy { intent.getStringExtra(CHAT_ROOM_ID) }
+    val roomId: String by lazy { intent.getStringExtra(CHAT_ROOM_ID) }
 
     lateinit var binding: ActivityChatBinding
 
@@ -19,7 +19,7 @@ class ChatActivity : BaseActivity() {
         super.onCreate(savedInstanceState)
         binding = DataBindingUtil.setContentView(this, R.layout.activity_chat)
         initToolbar()
-        initFragment(matchingId)
+        initFragment(roomId)
     }
 
     override fun onOptionsItemSelected(item: MenuItem?): Boolean {
@@ -33,6 +33,7 @@ class ChatActivity : BaseActivity() {
     }
 
     fun initToolbar() {
+        title = roomId
         setSupportActionBar(binding.toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
     }

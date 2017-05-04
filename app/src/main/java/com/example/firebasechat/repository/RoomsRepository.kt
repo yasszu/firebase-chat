@@ -1,22 +1,43 @@
 package com.example.firebasechat.repository
 
 import com.example.firebasechat.model.Room
+import com.example.firebasechat.model.Snapshot
+import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.FirebaseDatabase
 
 /**
  * Created by Yasuhiro Suzuki on 2017/05/03.
  */
 object RoomsRepository {
 
-    fun findAll() : List<Room>  {
-        // TODO Dummy data
-        val rooms = listOf(
-            Room(id = "0"),
-            Room(id = "tsxdsdr3j9"),
-            Room(id = "test1234523"),
-            Room(id = "#sdvsriop"),
-            Room(id = "45o9bjsdmrl")
-        )
-        return rooms
+    val ROOMS_CHILD = "rooms"
+
+    var onSnapshotsUpdate: () -> Unit = {}
+
+    val reference: DatabaseReference = FirebaseDatabase.getInstance()
+        .getReference(ROOMS_CHILD)
+        .child(SessionRepository.uid)
+
+    val snapshot: Snapshot
+
+    init {
+       snapshot = Snapshot(reference).apply {
+           onDataAdded = { onSnapshotsUpdate() }
+           onDataChanged = { onSnapshotsUpdate() }
+           onDataRemoved = { onSnapshotsUpdate() }
+           onDataMoved = { onSnapshotsUpdate() }
+       }
+    }
+
+    fun post(room: Room) {
+        if (room.id.isNullOrEmpty()) return
+        reference.push().setValue(room)
+    }
+
+    fun findAll(): List<Room> = snapshot.getValues()
+
+    fun removeListener() {
+        onSnapshotsUpdate = {}
     }
 
 }

@@ -1,7 +1,6 @@
 package com.example.firebasechat.view.room
 
 import android.databinding.ObservableArrayList
-import android.databinding.ObservableField
 import android.databinding.ObservableList
 import android.view.View
 import com.example.firebasechat.model.Room
@@ -16,17 +15,22 @@ class RoomsViewModel {
 
     var onClickSubmit: () -> Unit = {}
 
-    val textEdit: ObservableField<String> = ObservableField()
-
     val rooms: ObservableArrayList<Room> = ObservableArrayList()
 
     var callback: ObservableList.OnListChangedCallback<ObservableList<Room>>? = null
 
     init {
-        fetch()
+        setDataChangeListener()
+    }
+
+    fun setDataChangeListener() {
+        RoomsRepository.onSnapshotsUpdate = {
+            fetch()
+        }
     }
 
     fun fetch() {
+        this.rooms.clear()
         setRooms(RoomsRepository.findAll())
     }
 
@@ -49,6 +53,8 @@ class RoomsViewModel {
 
     fun destroy() {
         rooms.removeOnListChangedCallback(callback)
+        callback = null
+        RoomsRepository.removeListener()
     }
 
 }
