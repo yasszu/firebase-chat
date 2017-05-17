@@ -11,6 +11,7 @@ import com.example.firebasechat.R
 import com.example.firebasechat.databinding.ActivityMainBinding
 import com.example.firebasechat.view.base.BaseActivity
 import com.example.firebasechat.view.chat.ChatActivity
+import com.example.firebasechat.view.room.RoomsActivity
 import com.google.android.gms.auth.api.Auth
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
@@ -35,7 +36,7 @@ class MainActivity : BaseActivity(), GoogleApiClient.OnConnectionFailedListener 
         if (auth.currentUser == null) {
             Log.d("FirebaseAuth", "signed_out")
         } else {
-            startChatRoom()
+            startRoomsActivity()
         }
     }
 
@@ -124,10 +125,9 @@ class MainActivity : BaseActivity(), GoogleApiClient.OnConnectionFailedListener 
         Toast.makeText(this, "Google Play Services error.", Toast.LENGTH_SHORT).show()
     }
 
-    fun startChatRoom() {
+    fun startRoomsActivity() {
         if (!isLogin) return
-        val roomId = 0
-        ChatActivity.start(this, roomId)
+        RoomsActivity.start(this)
         finish()
     }
 

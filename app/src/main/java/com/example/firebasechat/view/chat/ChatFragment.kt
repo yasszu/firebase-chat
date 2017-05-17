@@ -26,7 +26,7 @@ class ChatFragment : BaseFragment() {
 
     val auth: FirebaseAuth = FirebaseAuth.getInstance()
 
-    val roomId: Int by lazy { arguments.getInt(ROOM_ID, 0) }
+    val roomId: String by lazy { arguments.getString(ROOM_ID) }
 
     val members: MembersRepository by lazy { MembersRepository(roomId) }
 
@@ -57,18 +57,19 @@ class ChatFragment : BaseFragment() {
        }
    }
 
-
     lateinit var recyclerView: RecyclerView
+
     lateinit var editText: EditText
+
     lateinit var sendButton: View
 
     companion object {
         val ROOM_ID = "roomId"
         val TAG: String = ChatFragment::class.java.simpleName
-        fun newInstance(matchingId: Int): ChatFragment {
+        fun newInstance(matchingId: String): ChatFragment {
             return ChatFragment().apply {
                 this.arguments = Bundle().apply {
-                    this.putInt(ROOM_ID, matchingId)
+                    this.putString(ROOM_ID, matchingId)
                 }
             }
         }

@@ -20,6 +20,8 @@
         </activity>
         <activity android:name=".view.chat.ChatActivity"
             android:label="Chat Room"/>
+        <activity android:name=".view.room.RoomsActivity"
+            android:label="Select a chat room"/>
     </application>
 
 </manifest>
