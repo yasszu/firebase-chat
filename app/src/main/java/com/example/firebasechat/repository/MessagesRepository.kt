@@ -30,6 +30,14 @@ class MessagesRepository(val roomId: Int) {
         reference.push().setValue(message)
     }
 
+    fun setSaved(ref: DatabaseReference, message: Message) {
+        ref.setValue(Message(message.uid, message.body, message.timestamp, !message.saved))
+    }
+
+    fun delete(ref: DatabaseReference) {
+        ref.removeValue()
+    }
+
     fun findAll(): List<Message> = firebaseData.snapshots.map { it.getValue(Message::class.java) }
 
 }

@@ -10,22 +10,9 @@ import com.firebase.ui.database.FirebaseRecyclerAdapter
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.Query
 import com.example.firebasechat.model.Message
+import com.example.firebasechat.model.ViewType
 
-class ChatAdapter : FirebaseRecyclerAdapter<Message, ChatAdapter.MessageViewHolder> {
-
-    enum class ViewType(val id: Int) {
-        OTHERS(0) {
-            override fun getLayout(): Int {
-                return R.layout.item_message
-            }
-        },
-        ME(1) {
-            override fun getLayout(): Int {
-                return R.layout.item_message_me
-            }
-        };
-        abstract fun getLayout(): Int
-    }
+class ChatAdapter: FirebaseRecyclerAdapter<Message, ChatAdapter.MessageViewHolder> {
 
     interface Listener {
         fun onPopulate(viewHolder: MessageViewHolder?, message: Message?, ref: DatabaseReference)
@@ -39,7 +26,7 @@ class ChatAdapter : FirebaseRecyclerAdapter<Message, ChatAdapter.MessageViewHold
     constructor(modelClass: Class<Message>?, modelLayout: Int, viewHolderClass: Class<MessageViewHolder>?, ref: DatabaseReference?) : super(modelClass, modelLayout, viewHolderClass, ref)
 
     constructor(ref: DatabaseReference?, listener: Listener) : super(Message::class.java, R.layout.item_message, MessageViewHolder::class.java, ref) {
-        this.mListener = listener
+        mListener = listener
     }
 
     override fun onCreateViewHolder(parent: ViewGroup?, viewType: Int): MessageViewHolder {
@@ -60,9 +47,9 @@ class ChatAdapter : FirebaseRecyclerAdapter<Message, ChatAdapter.MessageViewHold
     }
 
     class MessageViewHolder(v: View) : RecyclerView.ViewHolder(v) {
-        var thumbnail: ImageView = v.findViewById(R.id.thumbnail) as ImageView
-        var content: TextView = v.findViewById(R.id.content) as TextView
-        var author: TextView = v.findViewById(R.id.author) as TextView
+        val thumbnail: ImageView = v.findViewById(R.id.thumbnail) as ImageView
+        val content: TextView = v.findViewById(R.id.content) as TextView
+        val author: TextView = v.findViewById(R.id.author) as TextView
     }
 
 }

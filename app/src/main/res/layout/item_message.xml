@@ -37,6 +37,7 @@
             android:layout_marginRight="@dimen/margin_small"
             android:layout_marginTop="@dimen/margin_min"
             android:padding="@dimen/margin_default"
+            android:foreground="?selectableItemBackgroundBorderless"
             android:background="@drawable/selector_background_radius"
             android:textColor="@color/black"
             android:textSize="@dimen/text_size_body"/>

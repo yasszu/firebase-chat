@@ -2,6 +2,7 @@ package com.example.firebasechat.view.chat
 
 import android.graphics.Color
 import android.os.Bundle
+import android.support.v7.app.AlertDialog
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
@@ -10,21 +11,19 @@ import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.ImageView
 import com.example.firebasechat.R
-import com.example.firebasechat.helper.ImageViewHelper.loadCircleImage
+import com.example.firebasechat.extension.loadCircleImage
 import com.example.firebasechat.model.Member
 import com.example.firebasechat.model.Message
+import com.example.firebasechat.model.ViewType
 import com.example.firebasechat.repository.MembersRepository
 import com.example.firebasechat.repository.MessagesRepository
+import com.example.firebasechat.repository.SessionRepository
 import com.example.firebasechat.view.base.BaseFragment
 import com.example.firebasechat.view.chat.ChatAdapter.MessageViewHolder
-import com.example.firebasechat.view.chat.ChatAdapter.ViewType
-import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DatabaseReference
 
 
 class ChatFragment : BaseFragment() {
-
-    val auth: FirebaseAuth = FirebaseAuth.getInstance()
 
     val roomId: Int by lazy { arguments.getInt(ROOM_ID, 0) }
 
@@ -34,21 +33,21 @@ class ChatFragment : BaseFragment() {
 
     val linearLayoutManager: LinearLayoutManager by lazy {
         LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false).apply {
-            this.stackFromEnd = true
+            stackFromEnd = true
         }
     }
 
    val adapter: ChatAdapter by lazy {
        ChatAdapter(messages.reference, object : ChatAdapter.Listener {
            override fun onGetItemViewType(message: Message): Int {
-               return if (isSelf(message.uid)) ViewType.ME.id else ViewType.OTHERS.id
+               return if (SessionRepository.isSelf(message)) ViewType.ME.id else ViewType.OTHERS.id
            }
 
            override fun onPopulate(viewHolder: MessageViewHolder?, message: Message?, ref: DatabaseReference) {
                populateItems(viewHolder!!, message!!, ref)
            }
        }).apply {
-           this.registerAdapterDataObserver(object : RecyclerView.AdapterDataObserver() {
+           registerAdapterDataObserver(object : RecyclerView.AdapterDataObserver() {
                override fun onItemRangeInserted(positionStart: Int, itemCount: Int) {
                    super.onItemRangeInserted(positionStart, itemCount)
                    scrollToShowNewItem(positionStart)
@@ -57,9 +56,10 @@ class ChatFragment : BaseFragment() {
        }
    }
 
-
     lateinit var recyclerView: RecyclerView
+
     lateinit var editText: EditText
+
     lateinit var sendButton: View
 
     companion object {
@@ -67,8 +67,8 @@ class ChatFragment : BaseFragment() {
         val TAG: String = ChatFragment::class.java.simpleName
         fun newInstance(matchingId: Int): ChatFragment {
             return ChatFragment().apply {
-                this.arguments = Bundle().apply {
-                    this.putInt(ROOM_ID, matchingId)
+                arguments = Bundle().apply {
+                    putInt(ROOM_ID, matchingId)
                 }
             }
         }
@@ -90,12 +90,12 @@ class ChatFragment : BaseFragment() {
         recyclerView = view?.findViewById(R.id.recyclerView) as RecyclerView
         editText = view.findViewById(R.id.editText) as EditText
         sendButton = view.findViewById(R.id.sendButton).apply {
-            this.setOnClickListener { writeMessage(editText.text.toString()) }
+            setOnClickListener { writeMessage(editText.text.toString()) }
         }
     }
 
     fun sendProfile() {
-        val currentUser = auth.currentUser?: return
+        val currentUser = SessionRepository.currentUser?: return
         members.write(currentUser)
     }
 
@@ -111,9 +111,23 @@ class ChatFragment : BaseFragment() {
         viewHolder.content.setTextColor(if (message.saved) Color.WHITE else Color.BLACK)
         viewHolder.author.text = member?.name
         setThumbnail(viewHolder.thumbnail, member?.photoUrl)
-        viewHolder.content.setOnClickListener {
-            ref.setValue(Message(message.uid, message.body, message.timestamp, !message.saved))
+        viewHolder.content.setOnClickListener { messages.setSaved(ref, message) }
+        viewHolder.content.setOnLongClickListener { deleteMessage(ref, message)}
+    }
+
+    fun deleteMessage(ref: DatabaseReference, message: Message): Boolean {
+        if (SessionRepository.isSelf(message)) {
+            showDeleteDialog(ref)
         }
+        return true
+    }
+
+    fun showDeleteDialog(ref: DatabaseReference) {
+        val builder = AlertDialog.Builder(context)
+        builder.setTitle(R.string.delete_title)
+        builder.setPositiveButton(R.string.delete, { _, _ -> messages.delete(ref) })
+        builder.setNegativeButton(R.string.cancel, { _, _ ->  })
+        builder.create().show()
     }
 
     fun scrollToShowNewItem(positionStart: Int) {
@@ -129,11 +143,9 @@ class ChatFragment : BaseFragment() {
     }
 
     fun writeMessage(text: String) {
-        val uid = auth.currentUser?.uid ?: return
+        val uid = SessionRepository.uid ?: return
         messages.post(Message(uid, text, messages.timeStamp, false))
         editText.setText("")
     }
-
-    fun isSelf(uid: String) = auth.currentUser?.uid == uid
 
 }
