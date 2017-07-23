@@ -2,6 +2,7 @@ package com.example.firebasechat.view.chat
 
 import android.graphics.Color
 import android.os.Bundle
+import android.support.v7.app.AlertDialog
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
@@ -110,9 +111,23 @@ class ChatFragment : BaseFragment() {
         viewHolder.content.setTextColor(if (message.saved) Color.WHITE else Color.BLACK)
         viewHolder.author.text = member?.name
         setThumbnail(viewHolder.thumbnail, member?.photoUrl)
-        viewHolder.content.setOnClickListener {
-            ref.setValue(Message(message.uid, message.body, message.timestamp, !message.saved))
+        viewHolder.content.setOnClickListener { messages.setSaved(ref, message) }
+        viewHolder.content.setOnLongClickListener { deleteMessage(ref, message)}
+    }
+
+    fun deleteMessage(ref: DatabaseReference, message: Message): Boolean {
+        if (SessionRepository.isSelf(message)) {
+            showDeleteDialog(ref)
         }
+        return true
+    }
+
+    fun showDeleteDialog(ref: DatabaseReference) {
+        val builder = AlertDialog.Builder(context)
+        builder.setTitle(R.string.delete_title)
+        builder.setPositiveButton(R.string.delete, { _, _ -> messages.delete(ref) })
+        builder.setNegativeButton(R.string.cancel, { _, _ ->  })
+        builder.create().show()
     }
 
     fun scrollToShowNewItem(positionStart: Int) {

@@ -1,4 +1,7 @@
 <resources>
     <string name="app_name">FirebaseChat</string>
     <string name="web_client_id">930768419824-vurglmtvb6532td0b7dps4eulodj10us.apps.googleusercontent.com</string>
+    <string name="delete_title">Delete message?</string>
+    <string name="delete">Delete</string>
+    <string name="cancel">Cancel</string>
 </resources>
