@@ -11,6 +11,7 @@ import com.example.firebasechat.view.base.BaseActivity
 class ChatActivity : BaseActivity() {
 
     val matchingId: Int by lazy { intent.getIntExtra(CHAT_ROOM_ID, -1) }
+
     val toolbar: Toolbar by lazy { findViewById(R.id.toolbar) as Toolbar }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -20,14 +21,12 @@ class ChatActivity : BaseActivity() {
         initFragment(matchingId)
     }
 
-    override fun onOptionsItemSelected(item: MenuItem?): Boolean {
-        when(item?.itemId) {
-            android.R.id.home -> {
-                finish()
-                return true
-            }
-            else -> return super.onOptionsItemSelected(item)
+    override fun onOptionsItemSelected(item: MenuItem?) = when(item?.itemId) {
+        android.R.id.home -> {
+            finish()
+            true
         }
+        else -> super.onOptionsItemSelected(item)
     }
 
     fun initFragment(matchingId: Int) {

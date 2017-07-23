@@ -9,6 +9,7 @@ import android.util.Log
 import android.widget.Toast
 import com.example.firebasechat.R
 import com.example.firebasechat.databinding.ActivityMainBinding
+import com.example.firebasechat.repository.SessionRepository
 import com.example.firebasechat.view.base.BaseActivity
 import com.example.firebasechat.view.chat.ChatActivity
 import com.google.android.gms.auth.api.Auth
@@ -19,17 +20,18 @@ import com.google.android.gms.common.api.GoogleApiClient
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
 
-
+/**
+ * Login with Google Account.
+ */
 class MainActivity : BaseActivity(), GoogleApiClient.OnConnectionFailedListener {
 
     val TAG = "MainActivity"
+
     val RC_SIGN_IN = 1000
 
     lateinit var mBinding: ActivityMainBinding
 
     lateinit var mGoogleApiClient: GoogleApiClient
-
-    val mAuth: FirebaseAuth = FirebaseAuth.getInstance()
 
     val mAuthListener = FirebaseAuth.AuthStateListener { auth ->
         if (auth.currentUser == null) {
@@ -38,8 +40,6 @@ class MainActivity : BaseActivity(), GoogleApiClient.OnConnectionFailedListener 
             startChatRoom()
         }
     }
-
-    val isLogin: Boolean get() = mAuth.currentUser != null
 
     val gso: GoogleSignInOptions by lazy { GoogleSignInOptions
             .Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
@@ -57,12 +57,12 @@ class MainActivity : BaseActivity(), GoogleApiClient.OnConnectionFailedListener 
 
     override fun onStart() {
         super.onStart()
-        mAuth.addAuthStateListener(mAuthListener)
+        FirebaseAuth.getInstance().addAuthStateListener(mAuthListener)
     }
 
     override fun onStop() {
         super.onStop()
-        mAuth.removeAuthStateListener(mAuthListener)
+        FirebaseAuth.getInstance().removeAuthStateListener(mAuthListener)
     }
 
     fun setupViews() {
@@ -91,7 +91,7 @@ class MainActivity : BaseActivity(), GoogleApiClient.OnConnectionFailedListener 
 
     fun firebaseAuthWithGoogle(acct: GoogleSignInAccount) {
         val credential = GoogleAuthProvider.getCredential(acct.idToken, null)
-        mAuth.signInWithCredential(credential).addOnCompleteListener(this) { task ->
+        FirebaseAuth.getInstance().signInWithCredential(credential).addOnCompleteListener(this) { task ->
             if (!task.isSuccessful) {
                 Toast.makeText(this, "Authentication failed.", Toast.LENGTH_SHORT).show()
             }
@@ -104,7 +104,7 @@ class MainActivity : BaseActivity(), GoogleApiClient.OnConnectionFailedListener 
     }
 
     fun signOut() {
-        mAuth.signOut()
+        FirebaseAuth.getInstance().signOut()
         // Google sign out
         Auth.GoogleSignInApi.signOut(mGoogleApiClient).setResultCallback{
             Toast.makeText(this, "Google sign out.", Toast.LENGTH_SHORT).show()
@@ -112,7 +112,7 @@ class MainActivity : BaseActivity(), GoogleApiClient.OnConnectionFailedListener 
     }
 
     fun revokeAccess() {
-        mAuth.signOut()
+        FirebaseAuth.getInstance().signOut()
         // Google revoke access
         Auth.GoogleSignInApi.revokeAccess(mGoogleApiClient).setResultCallback{
             Toast.makeText(this, "Google sign out.", Toast.LENGTH_SHORT).show()
@@ -125,7 +125,7 @@ class MainActivity : BaseActivity(), GoogleApiClient.OnConnectionFailedListener 
     }
 
     fun startChatRoom() {
-        if (!isLogin) return
+        if (!SessionRepository.isLogin) return
         val roomId = 0
         ChatActivity.start(this, roomId)
         finish()
